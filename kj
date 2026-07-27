@@ -1,0 +1,216 @@
+#!/usr/bin/env bash
+
+USE_DUMMY_NS=false
+NAMESPACE_MODE=false
+CLUSTER_MODE=true
+LIST_MODE=false
+
+
+dummy_namespaces() {
+cat <<EOF
+dummy
+kube-system
+development
+staging
+production
+EOF
+}
+
+usage() {
+cat <<'EOF'
+☸ Kubernetes Jumper 🚀
+
+Usage:
+  kj [OPTION]
+
+Options:
+  -a    Select cluster and namespace
+  -n    Select namespace only
+  -l    Show current cluster and namespace
+  -h    Show this help
+
+Examples:
+  kj       Switch cluster
+  kj -n    Switch namespace
+  kj -a    Switch cluster then namespace
+  kj -l    Display current cluster/namespace
+
+Navigation:
+  j / ↓   Move down
+  k / ↑   Move up
+  Enter   Select
+  Esc     Quit
+EOF
+}
+
+show_status() {
+    local cluster namespace
+
+    cluster=$(kubectl config current-context 2>/dev/null)
+
+    namespace=$(kubectl config view \
+        --minify \
+        -o jsonpath='{..namespace}' 2>/dev/null)
+
+    namespace=${namespace:-default}
+
+    echo "☸ Cluster  : $cluster"
+    echo "✓ Namespace: $namespace"
+}
+
+switch_namespace() {
+    echo
+    echo "Navigate: ↑/↓ or j/k • Enter to select • Esc to quit"
+    echo
+
+    if [[ "$USE_DUMMY_NS" == true ]]; then
+
+        NAMESPACE=$(
+            dummy_namespaces |
+            fzf \
+                --prompt="Namespace > " \
+                --height=40% \
+                --border \
+                --reverse \
+                --bind='j:down,k:up'
+        )
+
+    else
+
+        NAMESPACE=$(
+            kubectl get namespaces \
+                -o jsonpath='{.items[*].metadata.name}' 2>/dev/null |
+            tr ' ' '\n' |
+            fzf \
+                --prompt="Namespace > " \
+                --height=40% \
+                --border \
+                --reverse \
+                --bind='j:down,k:up'
+        )
+
+    fi
+
+    [[ -n "$NAMESPACE" ]] || exit 0
+
+    kubectl config set-context \
+        --current \
+        --namespace="$NAMESPACE" >/dev/null
+
+    clear
+    show_status
+}
+
+while getopts "anlh" opt; do
+    case $opt in
+        a)
+            CLUSTER_MODE=true
+            NAMESPACE_MODE=true
+            ;;
+        n)
+            CLUSTER_MODE=false
+            NAMESPACE_MODE=true
+            ;;
+        l)
+            LIST_MODE=true
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
+        *)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+# --------------------------------------------------
+# List Mode
+# --------------------------------------------------
+
+if [[ "$LIST_MODE" == true ]]; then
+    show_status
+    exit 0
+fi
+
+# --------------------------------------------------
+# Namespace Only Mode (-n)
+# --------------------------------------------------
+
+if [[ "$CLUSTER_MODE" == false ]]; then
+    switch_namespace
+    exit 0
+fi
+
+# --------------------------------------------------
+# Cluster Selection (default and -a)
+# --------------------------------------------------
+
+CURRENT=$(kubectl config current-context 2>/dev/null)
+
+clear
+
+echo "======================================"
+echo "     ☸  Kubernetes Jumper 🚀"
+echo "======================================"
+echo
+echo "Current Context: $CURRENT"
+echo
+echo "Navigate: ↑/↓ or j/k • Enter to select • Esc to quit"
+echo
+
+contexts=()
+
+while IFS= read -r context; do
+    contexts+=("$context")
+done < <(kubectl config get-contexts -o name 2>/dev/null)
+
+if [[ ${#contexts[@]} -eq 0 ]]; then
+    echo "❌ No Kubernetes contexts found."
+    echo "   Make sure your kubeconfig is configured."
+    exit 1
+fi
+
+current_context=$(kubectl config current-context 2>/dev/null)
+
+if [[ -z "$current_context" ]]; then
+    echo "⚠️  No current context is selected."
+fi
+
+if ! kubectl cluster-info >/dev/null 2>&1; then
+    echo "⚠️  Kubernetes cluster '$current_context' is currently unreachable."
+    echo "   You can still switch contexts."
+fi
+
+CONTEXT=$(
+    printf '%s\n' "${contexts[@]}" |
+    fzf \
+        --prompt="Cluster > " \
+        --height=40% \
+        --border \
+        --reverse \
+        --bind='j:down,k:up'
+)
+
+[[ -n "$CONTEXT" ]] || exit 0
+
+kubectl config use-context "$CONTEXT" >/dev/null
+
+clear
+
+# --------------------------------------------------
+# Cluster only (default)
+# --------------------------------------------------
+
+if [[ "$NAMESPACE_MODE" == false ]]; then
+    show_status
+    exit 0
+fi
+
+# --------------------------------------------------
+# Cluster + Namespace (-a)
+# --------------------------------------------------
+
+switch_namespace
+
