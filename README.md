@@ -191,4 +191,4 @@ Instead of remembering long commands or repeatedly editing configuration files, 
 
 ## License
 
-Add your preferred license here.
+BSD License
