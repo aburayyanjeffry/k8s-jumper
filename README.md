@@ -18,6 +18,8 @@ All three tools use the same menu-based approach for quickly navigating configur
 ### ☸ `kj` — Kubernetes Jumper
 
 Use `kj` to interactively switch between Kubernetes contexts and namespaces.
+<img width="837" height="527" alt="image" src="https://github.com/user-attachments/assets/8b95f480-4529-422f-9902-51c93c1cb674" />
+
 
 **Features:**
 
@@ -31,6 +33,7 @@ Use `kj` to interactively switch between Kubernetes contexts and namespaces.
 ### ☁ `awss` — AWS Config Jumper
 
 Use `awss` to interactively browse AWS configuration profiles defined in `.aws/config`.
+<img width="837" height="266" alt="image" src="https://github.com/user-attachments/assets/08058139-ecf3-4688-8f2d-6940011d7c45" />
 
 **Features:**
 
@@ -42,6 +45,7 @@ Use `awss` to interactively browse AWS configuration profiles defined in `.aws/c
 ### 🔐 `sss` — SSH Config Jumper
 
 Use `sss` to interactively browse hosts defined in `.ssh/config`.
+<img width="837" height="310" alt="image" src="https://github.com/user-attachments/assets/89b3d63a-8f0c-4d67-bfef-6c145be40b9b" />
 
 **Features:**
 
