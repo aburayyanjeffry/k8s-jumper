@@ -1,168 +1,190 @@
-# ☸ Kubernetes Jumper (kj)
+# ☸ Kubernetes Jumper (kj) and Sons!
 
 Kubernetes Jumper (`kj`) is a lightweight command-line utility that makes it easy to switch between Kubernetes clusters and namespaces using an interactive `fzf` menu.
 
-It is inspired by tools such as `kubectx` and `kubens`, but combines common workflows into a single command.
+It is inspired by tools such as `kubectx` and `kubens`, but combines common workflows into a single, simple command.
+
+The project now includes two companion scripts:
+
+- `awss` — interactively browse and select profiles from `.aws/config`
+- `sss` — interactively browse and select hosts from `.ssh/config`
+
+All three tools use the same menu-based approach for quickly navigating configuration files.
 
 ---
 
-## Features
+## Tools
 
-- Interactive cluster selection
+### ☸ `kj` — Kubernetes Jumper
+
+Use `kj` to interactively switch between Kubernetes contexts and namespaces.
+
+**Features:**
+
+- Interactive Kubernetes context selection
 - Interactive namespace selection
-- Cluster + namespace switching in one command
-- Display current cluster and namespace
+- Switch cluster and namespace in one workflow
+- Display the current cluster and namespace
 - Keyboard navigation using `j` and `k`
 - Works with existing kubeconfig contexts
+
+### ☁ `awss` — AWS Config Jumper
+
+Use `awss` to interactively browse AWS configuration profiles defined in `.aws/config`.
+
+**Features:**
+
+- Interactive AWS profile selection
+- Reads configuration from `~/.aws/config`
+- Quickly browse and select AWS profiles
+- Uses the same menu-based workflow as `kj`
+
+### 🔐 `sss` — SSH Config Jumper
+
+Use `sss` to interactively browse hosts defined in `.ssh/config`.
+
+**Features:**
+
+- Interactive SSH host selection
+- Reads configuration from `~/.ssh/config`
+- Quickly browse and select SSH hosts
+- Uses the same menu-based workflow as `kj`
 
 ---
 
 ## Requirements
 
-- kubectl
-- fzf
+- `kubectl` — required by `kj`
+- `openssh` — required by `sss`
+- `aws-cli` — required by `awss`
+- `fzf` — used by all interactive menus
+- AWS configuration file (`~/.aws/config`) — required by `awss`
+- SSH configuration file (`~/.ssh/config`) — required by `sss`
 
-### Install fzf
-
-Ubuntu / Debian:
-
-```bash
-sudo apt update
-sudo apt install -y fzf
-```
-
-macOS (Homebrew):
-
-```bash
-brew install fzf
-```
-
-Verify installation:
-
-```bash
-kubectl version --client
-fzf --version
-```
 ---
 
 ## Installation
 
-Make the script executable:
+Clone the repository:
 
 ```bash
-chmod +x kj
+git clone <your-repository-url>
+cd <your-repository-directory>
 ```
 
-Optionally place it somewhere in your PATH:
+Make the scripts executable:
 
 ```bash
-sudo cp kj /usr/local/bin/kj
+chmod +x kj awss sss
 ```
+
+Move them somewhere in your `PATH`, for example:
+
+```bash
+sudo mv kj awss sss /usr/local/bin/
+```
+
+Or, if you prefer to keep personal scripts in `~/bin`:
+
+```bash
+mkdir -p ~/bin
+mv kj awss sss ~/bin/
+```
+
+Make sure `~/bin` is in your `PATH`.
 
 ---
 
 ## Usage
 
-### Switch Cluster
+### Kubernetes
 
-Select a Kubernetes cluster from your kubeconfig.
+Run:
 
 ```bash
 kj
 ```
 
-Example:
+Use:
 
+- `j` — move down
+- `k` — move up
+- `Enter` — select
 
-<img width="782" height="375" alt="image" src="https://github.com/user-attachments/assets/936e2f82-bf9f-42f4-a667-365653c5d2b9" />
+`kj` helps you quickly jump between Kubernetes contexts and namespaces.
 
+### AWS
 
-
----
-
-### Switch Namespace Only
-
-Switch namespace within the current cluster.
-
-```bash
-kj -n
-```
-
-Example:
-
-
-<img width="1100" height="407" alt="image" src="https://github.com/user-attachments/assets/ff4b857e-222b-46c7-a39e-e8dce896efa1" />
-
-
----
-
-### Switch Cluster and Namespace
-
-Select a cluster and then a namespace.
+Run:
 
 ```bash
-kj -a
+awss
 ```
 
-Example:
+Select an AWS profile from your `.aws/config`.
 
-<img width="781" height="753" alt="image" src="https://github.com/user-attachments/assets/721cd17e-e490-40ba-b639-5f36656a9c9f" />
+### SSH
 
----
-
-### Show Current Selection
-
-Display the currently active cluster and namespace.
+Run:
 
 ```bash
-kj -l
+sss
 ```
 
-Example:
-
-<img width="835" height="160" alt="image" src="https://github.com/user-attachments/assets/ecceca95-ba2b-46ee-907d-e2b971188f15" />
-
-
+Select an SSH host from your `.ssh/config`.
 
 ---
 
-### Help
+## Configuration Files
 
-Display help information.
+The tools read from your existing configuration files.
 
-```bash
-kj -h
-```
-
----
-
-## Keyboard Shortcuts
-
-| Key | Action |
-|------|---------|
-| j | Move down |
-| k | Move up |
-| ↑ | Move up |
-| ↓ | Move down |
-| Enter | Select |
-| Esc | Exit |
-
----
-
-## Command Summary
+### Kubernetes
 
 ```text
-kj       Select cluster
-kj -n    Select namespace only
-kj -a    Select cluster then namespace
-kj -l    Show current cluster and namespace
-kj -h    Show help
+~/.kube/config
 ```
+
+### AWS
+
+```text
+~/.aws/config
+```
+
+### SSH
+
+```text
+~/.ssh/config
+```
+
+No separate configuration database is required.
 
 ---
 
-## Author
+## Why "and Sons"?
 
-Jeffry Johar
+Because `kj` started as Kubernetes Jumper — and now it has a couple of little brothers:
 
-Built to simplify day-to-day Kubernetes navigation for DevOps engineers.
+```text
+        ☸ kj
+       /    \
+    ☁ awss  🔐 sss
+```
+
+One menu-based idea, three useful command-line tools.
+
+---
+
+## Philosophy
+
+Keep it simple.
+
+Instead of remembering long commands or repeatedly editing configuration files, use a small interactive menu to quickly find what you need.
+
+**Jump. Select. Done.**
+
+---
+
+## License
+
+Add your preferred license here.
