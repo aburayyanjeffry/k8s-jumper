@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SSH_CONFIG="${HOME}/.ssh/config"
+
+# Check that fzf is installed
+if ! command -v fzf >/dev/null 2>&1; then
+  echo "Error: fzf is not installed."
+  exit 1
+fi
+
+# Check that SSH config exists
+if [[ ! -f "$SSH_CONFIG" ]]; then
+  echo "Error: $SSH_CONFIG not found."
+  exit 1
+fi
+
+get_hosts() {
+  grep '^Host ' "$SSH_CONFIG" |
+    awk '{for(i=2;i<=NF;i++) print $i}' |
+    grep -v '\*' |
+    sort -u
+}
+
+# Process command line arguments
+case "${1:-}" in
+-h | --help)
+  cat <<EOF
+Usage: $(basename "$0") [OPTION]
+
+Select an SSH profile from ~/.ssh/config using fzf.
+
+Options:
+  -l, --list    List SSH hosts
+  -h, --help    Show this help message
+
+Examples:
+  $(basename "$0")
+  $(basename "$0") -l
+  $(basename "$0") --list
+EOF
+  exit 0
+  ;;
+-l | --list)
+  get_hosts
+  exit 0
+  ;;
+"")
+  ;;
+*)
+  echo "Error: Unknown option '$1'"
+  echo "Try '$(basename "$0") --help'"
+  exit 1
+  ;;
+esac
+
+HOST=$(
+  get_hosts |
+    fzf \
+      --height=40% \
+      --reverse \
+      --prompt="SSH Profile > " \
+      --border \
+      --bind='j:down,k:up'
+)
+
+[[ -z "${HOST:-}" ]] && exit 0
+
+exec ssh "$HOST"
