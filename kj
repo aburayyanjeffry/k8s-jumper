@@ -5,9 +5,8 @@ NAMESPACE_MODE=false
 CLUSTER_MODE=true
 LIST_MODE=false
 
-
 dummy_namespaces() {
-cat <<EOF
+  cat <<EOF
 dummy
 kube-system
 development
@@ -17,7 +16,7 @@ EOF
 }
 
 usage() {
-cat <<'EOF'
+  cat <<'EOF'
 ☸ Kubernetes Jumper 🚀
 
 Usage:
@@ -44,85 +43,85 @@ EOF
 }
 
 show_status() {
-    local cluster namespace
+  local cluster namespace
 
-    cluster=$(kubectl config current-context 2>/dev/null)
+  cluster=$(kubectl config current-context 2>/dev/null)
 
-    namespace=$(kubectl config view \
-        --minify \
-        -o jsonpath='{..namespace}' 2>/dev/null)
+  namespace=$(kubectl config view \
+    --minify \
+    -o jsonpath='{..namespace}' 2>/dev/null)
 
-    namespace=${namespace:-default}
+  namespace=${namespace:-default}
 
-    echo "☸ Cluster  : $cluster"
-    echo "✓ Namespace: $namespace"
+  echo "☸ Cluster  : $cluster"
+  echo "✓ Namespace: $namespace"
 }
 
 switch_namespace() {
-    echo
-    echo "Navigate: ↑/↓ or j/k • Enter to select • Esc to quit"
-    echo
+  echo
+  echo "Navigate: ↑/↓ or j/k • Enter to select • Esc to quit"
+  echo
 
-    if [[ "$USE_DUMMY_NS" == true ]]; then
+  if [[ "$USE_DUMMY_NS" == true ]]; then
 
-        NAMESPACE=$(
-            dummy_namespaces |
-            fzf \
-                --prompt="Namespace > " \
-                --height=40% \
-                --border \
-                --reverse \
-                --bind='j:down,k:up'
-        )
+    NAMESPACE=$(
+      dummy_namespaces |
+        fzf \
+          --prompt="Namespace > " \
+          --height=40% \
+          --border \
+          --reverse \
+          --bind='j:down,k:up'
+    )
 
-    else
+  else
 
-        NAMESPACE=$(
-            kubectl get namespaces \
-                -o jsonpath='{.items[*].metadata.name}' 2>/dev/null |
-            tr ' ' '\n' |
-            fzf \
-                --prompt="Namespace > " \
-                --height=40% \
-                --border \
-                --reverse \
-                --bind='j:down,k:up'
-        )
+    NAMESPACE=$(
+      kubectl get namespaces \
+        -o jsonpath='{.items[*].metadata.name}' 2>/dev/null |
+        tr ' ' '\n' |
+        fzf \
+          --prompt="Namespace > " \
+          --height=40% \
+          --border \
+          --reverse \
+          --bind='j:down,k:up'
+    )
 
-    fi
+  fi
 
-    [[ -n "$NAMESPACE" ]] || exit 0
+  [[ -n "$NAMESPACE" ]] || exit 0
 
-    kubectl config set-context \
-        --current \
-        --namespace="$NAMESPACE" >/dev/null
+  kubectl config set-context \
+    --current \
+    --namespace="$NAMESPACE" >/dev/null
 
-    clear
-    show_status
+  clear
+  show_status
 }
 
 while getopts "anlh" opt; do
-    case $opt in
-        a)
-            CLUSTER_MODE=true
-            NAMESPACE_MODE=true
-            ;;
-        n)
-            CLUSTER_MODE=false
-            NAMESPACE_MODE=true
-            ;;
-        l)
-            LIST_MODE=true
-            ;;
-        h)
-            usage
-            exit 0
-            ;;
-        *)
-            usage
-            exit 1
-            ;;
-    esac
+  case $opt in
+  a)
+    CLUSTER_MODE=true
+    NAMESPACE_MODE=true
+    ;;
+  n)
+    CLUSTER_MODE=false
+    NAMESPACE_MODE=true
+    ;;
+  l)
+    LIST_MODE=true
+    ;;
+  h)
+    usage
+    exit 0
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+  esac
 done
 
 # --------------------------------------------------
@@ -130,8 +129,8 @@ done
 # --------------------------------------------------
 
 if [[ "$LIST_MODE" == true ]]; then
-    show_status
-    exit 0
+  show_status
+  exit 0
 fi
 
 # --------------------------------------------------
@@ -139,8 +138,8 @@ fi
 # --------------------------------------------------
 
 if [[ "$CLUSTER_MODE" == false ]]; then
-    switch_namespace
-    exit 0
+  switch_namespace
+  exit 0
 fi
 
 # --------------------------------------------------
@@ -160,37 +159,44 @@ echo
 echo "Navigate: ↑/↓ or j/k • Enter to select • Esc to quit"
 echo
 
+# Check if kubectl is installed
+if ! command -v kubectl >/dev/null 2>&1; then
+  echo "❌ kubectl is not installed."
+  echo "   Please install kubectl and try again."
+  exit 1
+fi
+
 contexts=()
 
 while IFS= read -r context; do
-    contexts+=("$context")
+  contexts+=("$context")
 done < <(kubectl config get-contexts -o name 2>/dev/null)
 
 if [[ ${#contexts[@]} -eq 0 ]]; then
-    echo "❌ No Kubernetes contexts found."
-    echo "   Make sure your kubeconfig is configured."
-    exit 1
+  echo "❌ No Kubernetes contexts found."
+  echo "   Make sure your kubeconfig is configured."
+  exit 1
 fi
 
 current_context=$(kubectl config current-context 2>/dev/null)
 
 if [[ -z "$current_context" ]]; then
-    echo "⚠️  No current context is selected."
+  echo "⚠️  No current context is selected."
 fi
 
 if ! kubectl cluster-info >/dev/null 2>&1; then
-    echo "⚠️  Kubernetes cluster '$current_context' is currently unreachable."
-    echo "   You can still switch contexts."
+  echo "⚠️  Kubernetes cluster '$current_context' is currently unreachable."
+  echo "   You can still switch contexts."
 fi
 
 CONTEXT=$(
-    printf '%s\n' "${contexts[@]}" |
+  printf '%s\n' "${contexts[@]}" |
     fzf \
-        --prompt="Cluster > " \
-        --height=40% \
-        --border \
-        --reverse \
-        --bind='j:down,k:up'
+      --prompt="Cluster > " \
+      --height=40% \
+      --border \
+      --reverse \
+      --bind='j:down,k:up'
 )
 
 [[ -n "$CONTEXT" ]] || exit 0
@@ -204,8 +210,8 @@ clear
 # --------------------------------------------------
 
 if [[ "$NAMESPACE_MODE" == false ]]; then
-    show_status
-    exit 0
+  show_status
+  exit 0
 fi
 
 # --------------------------------------------------
@@ -213,4 +219,3 @@ fi
 # --------------------------------------------------
 
 switch_namespace
-

@@ -10,6 +10,11 @@ if ! command -v fzf >/dev/null 2>&1; then
   exit 1
 fi
 
+# Check that ssh is installed
+if ! command -v ssh >/dev/null 2>&1; then
+  echo "Error: ssh is not installed."
+  exit 1
+fi
 # Check that SSH config exists
 if [[ ! -f "$SSH_CONFIG" ]]; then
   echo "Error: $SSH_CONFIG not found."
